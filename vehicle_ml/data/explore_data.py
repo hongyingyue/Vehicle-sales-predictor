@@ -15,10 +15,13 @@ def vis_scatter(data, x, y, c=None):
     num_column is for regression target
     https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.plot.scatter.html#pandas.DataFrame.plot.scatter
     """
-    plt.scatter(data[x], data[y], alpha=0.7)
-    plt.xlabel(x)
-    plt.ylabel(y)
-    plt.title(f"Scatter: {y} vs {x}")
+    if not c:
+        plt.scatter(data[x], data[y], alpha=0.7)
+        plt.xlabel(x)
+        plt.ylabel(y)
+        plt.title(f"Scatter: {y} vs {x}")
+    else:
+        data.plot.scatter(x=x, y=y, c=c, colormap="viridis")
     return
 
 
@@ -27,7 +30,7 @@ def vis_hist(data, column, class_column=None, bins=100):
     class_column is for classification problem
     """
     if not class_column:
-        plt.hist(data[column], bins=bins, ahpha=0.7)
+        plt.hist(data[column], bins=bins, alpha=0.7)
         plt.xlabel(column)
     else:
         unique_class = data[class_column].dropna().unique()
