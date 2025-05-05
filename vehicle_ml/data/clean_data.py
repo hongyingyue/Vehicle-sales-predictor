@@ -20,3 +20,9 @@ class DataCleaner:
             f"Finish cleaning data, elapsed in {time.time() - start_time:.0f}s, shape from {start_shape} to {data.shape}"
         )
         return
+
+    def __call__(self, data):
+        return self.clean(data)
+
+    def __repr__(self):
+        return "clean-data"

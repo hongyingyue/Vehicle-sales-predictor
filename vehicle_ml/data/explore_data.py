@@ -6,40 +6,35 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class DataExplorer:
-    def __init__(self) -> None:
-        pass
-
-    def explore(self, train_df, selected_columns, target_column, test_df=None):
-        return
-
-
-def vis_scatter():
-    """ """
+def explore_data(train_df, selected_columns, target_column, test_df=None):
     return
 
 
-def vis_hist(data, col, bins=100):
-    """ """
-    plt.hist(data[col], bins=bins)
-    plt.xlabel(col)
+def vis_scatter(data, x, y, c=None):
+    """
+    num_column is for regression target
+    https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.plot.scatter.html#pandas.DataFrame.plot.scatter
+    """
+    plt.scatter(data[x], data[y], alpha=0.7)
+    plt.xlabel(x)
+    plt.ylabel(y)
+    plt.title(f"Scatter: {y} vs {x}")
     return
 
 
-def vis_hist_by_class(self, value_col: str, class_col: str, bins=100, alpha=0.5, title=None):
-    # hist for classification, different label
-    unique_classes = self.data[class_col].dropna().unique()
-    for cls in sorted(unique_classes):
-        subset = self.data[self.data[class_col] == cls]
-        plt.hist(subset[value_col], bins=bins, alpha=alpha, label=f"{class_col}={cls}")
-
-    plt.xlabel(value_col)
-    plt.ylabel("Count")
-    plt.legend()
-    if title:
-        plt.title(title)
-    plt.grid(True)
-    plt.show()
+def vis_hist(data, column, class_column=None, bins=100):
+    """
+    class_column is for classification problem
+    """
+    if not class_column:
+        plt.hist(data[column], bins=bins, ahpha=0.7)
+        plt.xlabel(column)
+    else:
+        unique_class = data[class_column].dropna().unique()
+        for cls in sorted(unique_class):
+            samples = data.loc[data[class_column] == cls]
+            plt.hist(samples[column], bins=bins, label=f"{class_column}={cls}")
+        plt.legend()
     return
 
 

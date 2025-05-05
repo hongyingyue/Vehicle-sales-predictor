@@ -2,12 +2,19 @@ import logging
 import math
 import os
 import time
+import random
 from contextlib import contextmanager
 
 import numpy as np
 import psutil
 
 logger = logging.getLogger(__name__)
+
+
+def seed_everything(seed):
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
 
 
 def reduce_mem_usage(df, verbose: bool = True):

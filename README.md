@@ -40,7 +40,7 @@ cd examples
 python run_train.py
 ```
 
-Make predictions with the trained model:
+Make prediction server with the trained model:
 ```shell
 python run_server.py
 ```
@@ -49,5 +49,6 @@ Track your experiments
 ```
 mlflow ui
 ```
+
 
 ## Experiments

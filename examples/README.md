@@ -1,14 +1,18 @@
 # Examples
+The data is processed from open source sales data.
 
 ## Train experiments
+```shell
+python run_train.py
+```
 
 
 ## Server
 ```shell
-uvicorn run_server.api:app
+uvicorn app.api:app
 ```
 
 test
 ```
-http POST http://localhost:8000/predict input="OMG. I love how easy it is to stick to my schedule. Would recommend to everyone!"
+http POST http://localhost:8000/predict input="OMG"
 ```

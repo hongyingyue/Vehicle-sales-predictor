@@ -88,3 +88,4 @@ coverage.xml
 *.db
 *.mdl
 *.png
+*.json

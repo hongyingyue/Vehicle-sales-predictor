@@ -160,8 +160,3 @@ class Trainer:
 
     def get_best_iteration(self):
         return self.best_iteration
-
-
-class OptunaTrainer:
-    def __init__(self) -> None:
-        pass

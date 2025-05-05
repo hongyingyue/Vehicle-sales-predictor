@@ -42,6 +42,7 @@ LOGGING_CONFIG = {
             "class": "logging.FileHandler",
             "formatter": "default",
             "filename": "app.log",
+            "mode": "w",
         },
     },
     "root": {"level": "INFO", "handlers": ["console", "file_handler", "important_handler"]},

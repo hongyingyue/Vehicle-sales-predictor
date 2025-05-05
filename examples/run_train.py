@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import json
 import argparse
 import warnings
 from typing import Dict, List, Optional
@@ -13,13 +14,10 @@ import yaml
 
 from vehicle_ml import Trainer, logger
 from vehicle_ml.data import DataIngester, DatetimeSplitter
-from vehicle_ml.feature import (
-    add_lagging_feature,
-)
+from vehicle_ml.feature import add_lagging_feature
 from vehicle_ml.metrics.regression import get_mae, get_rmse
-from vehicle_ml.trainer_utils import *
 
-os.environ["DO_DEBUG"] = "true"
+os.environ["DO_DEBUG"] = "false"
 warnings.filterwarnings("ignore")
 
 
@@ -60,6 +58,14 @@ def add_features(data: pd.DataFrame, feature_columns: Optional[List[str]] = None
         feature_columns=feature_columns,
     )
 
+    data = add_lagging_feature(
+        data,
+        groupby_column=["provinceId", "model"],
+        value_columns=["popularity"],
+        lags=[1],
+        feature_columns=feature_columns,
+    )
+
     # data = add_rolling_feature(
     #     data=data,
     #     groupby_column=["provinceId", "model"],
@@ -88,9 +94,10 @@ def run_train(input_data_path, saved_model_path, config, label_column_name="sale
     data = prepare_data(input_data_path=input_data_path)
     data = data.sort_values(["Date", "provinceId"])
 
-    feature_columns = []
+    feature_columns = config["categorical_feature"].copy()
     data = add_features(data, feature_columns=feature_columns)
-    # data[config["categorical_feature"]] = data[config["categorical_feature"]].astype(str).astype('category')
+    # data.to_csv("temp.csv", index=False)
+    data[config["categorical_feature"]] = data[config["categorical_feature"]].astype(str).astype("category")
     logger.info(
         f"[IMPORTANT] Feature size: {len(feature_columns)}, categorical feature: {len(config['categorical_feature'])}"
     )
@@ -108,6 +115,8 @@ def run_train(input_data_path, saved_model_path, config, label_column_name="sale
     trainer = Trainer(model)
     trainer.train(x_train, y_train, x_valid, y_valid, fit_params=config["fit_params"])
 
+    with open("feature_columns.json", "w") as f:
+        json.dump(feature_columns, f, indent=4)
     trainer.save_model(model_dir=saved_model_path)
     trainer.plot_feature_importance()
 

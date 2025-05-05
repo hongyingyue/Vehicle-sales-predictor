@@ -38,7 +38,6 @@ df = df.sort_values(["provinceId", "Date"])
 
 print(df)
 
-
 df = add_lagging_feature(df, groupby_column=["provinceId", "model"], value_columns=["salesVolume"], lags=[1, 2, 3])
 
 print(df)
