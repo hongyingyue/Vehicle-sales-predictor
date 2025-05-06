@@ -31,13 +31,15 @@ def vis_hist(data, column, class_column=None, bins=100):
     """
     if not class_column:
         plt.hist(data[column], bins=bins, alpha=0.7)
-        plt.xlabel(column)
     else:
         unique_class = data[class_column].dropna().unique()
         for cls in sorted(unique_class):
             samples = data.loc[data[class_column] == cls]
             plt.hist(samples[column], bins=bins, label=f"{class_column}={cls}")
         plt.legend()
+    plt.xlabel(column)
+    plt.ylabel("frequency")
+    plt.show()
     return
 
 
