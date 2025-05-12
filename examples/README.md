@@ -32,10 +32,18 @@ mlflow.end_run()
 
 ## Server
 ```shell
-uvicorn app.api:app
+python app.py
 ```
 
 test
-```
-http POST http://localhost:8000/predict input="OMG"
+
+```shell
+curl -X POST "http://localhost:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "province_id": "P001",
+    "model_name": "ModelA",
+    "date": "202312",
+    "historical_sales": [120, 135, 142, 150, 138, 145, 160, 152, 148, 155, 165, 158]
+  }'
 ```

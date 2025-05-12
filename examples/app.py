@@ -332,4 +332,4 @@ if __name__ == "__main__":
     import uvicorn
 
     # Start server
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", workers=4)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, log_level="info", workers=4)
