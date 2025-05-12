@@ -29,6 +29,7 @@ def vis_hist(data, column, class_column=None, bins=100):
     """
     class_column is for classification problem
     """
+    plt.figure(figsize=(6, 4))
     if not class_column:
         plt.hist(data[column], bins=bins, alpha=0.7)
     else:
