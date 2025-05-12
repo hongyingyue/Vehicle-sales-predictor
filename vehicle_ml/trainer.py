@@ -63,8 +63,6 @@ class Trainer:
         y_valid: Optional[Union[np.ndarray, pd.Series]] = None,
         categorical_feature: Optional[List[str]] = None,
         fit_params: Optional[Dict[str, Any]] = None,
-        early_stopping_rounds: int = 100,
-        verbose: bool = True,
     ) -> Dict[str, float]:
         """Train the model with optional validation set.
 
@@ -75,8 +73,6 @@ class Trainer:
             y_valid: Optional validation labels
             categorical_feature: List of categorical feature names
             fit_params: Additional parameters for model fitting
-            early_stopping_rounds: Number of rounds for early stopping
-            verbose: Whether to print training progress
 
         Returns:
             Dictionary containing training metrics
@@ -84,25 +80,17 @@ class Trainer:
         self.input_shape = x_train.shape
         fit_params = fit_params or {}
 
-        if verbose:
-            logger.info(f"Training {self.model_type} model...")
+        logger.info(f"Training {self.model_type} model...")
 
         try:
             if self.model_type.startswith("LGBM"):
-                self._train_lightgbm(
-                    x_train, y_train, x_valid, y_valid, categorical_feature, fit_params, early_stopping_rounds, verbose
-                )
+                self._train_lightgbm(x_train, y_train, x_valid, y_valid, categorical_feature, fit_params)
             elif self.model_type.startswith("XGB"):
-                self._train_xgboost(
-                    x_train, y_train, x_valid, y_valid, categorical_feature, fit_params, early_stopping_rounds, verbose
-                )
+                self._train_xgboost(x_train, y_train, x_valid, y_valid, categorical_feature, fit_params)
             elif self.model_type.startswith("CatBoost"):
-                self._train_catboost(
-                    x_train, y_train, x_valid, y_valid, categorical_feature, fit_params, early_stopping_rounds, verbose
-                )
+                self._train_catboost(x_train, y_train, x_valid, y_valid, categorical_feature, fit_params)
 
-            if verbose:
-                logger.info(f"Training completed. Best iteration: {self.best_iteration}")
+            logger.info(f"Training completed. Best iteration: {self.best_iteration}")
 
             return self.metrics
 
@@ -118,8 +106,6 @@ class Trainer:
         y_valid: Optional[Union[np.ndarray, pd.Series]],
         categorical_feature: Optional[List[str]],
         fit_params: Dict[str, Any],
-        early_stopping_rounds: int,
-        verbose: bool,
     ):
         """Train LightGBM model."""
         eval_sets = [(x_train, y_train)]
@@ -131,8 +117,6 @@ class Trainer:
             y_train,
             eval_set=eval_sets,
             categorical_feature=categorical_feature,
-            early_stopping_rounds=early_stopping_rounds,
-            verbose=verbose,
             **fit_params,
         )
         self.best_iteration = self.model.best_iteration_
@@ -145,8 +129,6 @@ class Trainer:
         y_valid: Optional[Union[np.ndarray, pd.Series]],
         categorical_feature: Optional[List[str]],
         fit_params: Dict[str, Any],
-        early_stopping_rounds: int,
-        verbose: bool,
     ):
         """Train XGBoost model."""
         eval_sets = [(x_train, y_train)]
@@ -157,8 +139,6 @@ class Trainer:
             x_train,
             y_train,
             eval_set=eval_sets,
-            early_stopping_rounds=early_stopping_rounds,
-            verbose=verbose,
             **fit_params,
         )
         self.best_iteration = self.model.best_iteration
@@ -171,8 +151,6 @@ class Trainer:
         y_valid: Optional[Union[np.ndarray, pd.Series]],
         categorical_feature: Optional[List[str]],
         fit_params: Dict[str, Any],
-        early_stopping_rounds: int,
-        verbose: bool,
     ):
         """Train CatBoost model."""
         from catboost import Pool
@@ -183,9 +161,7 @@ class Trainer:
         else:
             valid_data = train_data
 
-        self.model.fit(
-            train_data, eval_set=valid_data, early_stopping_rounds=early_stopping_rounds, verbose=verbose, **fit_params
-        )
+        self.model.fit(train_data, eval_set=valid_data, **fit_params)
         self.best_iteration = self.model.get_best_iteration()
 
     def cross_validate(
@@ -196,8 +172,6 @@ class Trainer:
         stratified: bool = True,
         categorical_feature: Optional[List[str]] = None,
         fit_params: Optional[Dict[str, Any]] = None,
-        early_stopping_rounds: int = 100,
-        verbose: bool = True,
     ) -> Dict[str, List[float]]:
         """Perform cross-validation.
 
@@ -208,8 +182,6 @@ class Trainer:
             stratified: Whether to use stratified K-fold
             categorical_feature: List of categorical feature names
             fit_params: Additional parameters for model fitting
-            early_stopping_rounds: Number of rounds for early stopping
-            verbose: Whether to print progress
 
         Returns:
             Dictionary containing cross-validation metrics
@@ -222,27 +194,30 @@ class Trainer:
         cv_metrics = {"train_scores": [], "valid_scores": []}
 
         for fold, (train_idx, valid_idx) in enumerate(kf.split(x, y), 1):
-            if verbose:
-                logger.info(f"Training fold {fold}/{n_splits}")
+            logger.info(f"Training fold {fold}/{n_splits}")
 
             x_train, x_valid = x[train_idx], x[valid_idx]
             y_train, y_valid = y[train_idx], y[valid_idx]
 
             fold_metrics = self.train(
-                x_train, y_train, x_valid, y_valid, categorical_feature, fit_params, early_stopping_rounds, verbose
+                x_train,
+                y_train,
+                x_valid,
+                y_valid,
+                categorical_feature,
+                fit_params,
             )
 
             cv_metrics["train_scores"].append(fold_metrics.get("train_score", 0))
             cv_metrics["valid_scores"].append(fold_metrics.get("valid_score", 0))
 
-        if verbose:
-            logger.info(f"Cross-validation results:")
-            logger.info(
-                f"Train scores: {np.mean(cv_metrics['train_scores']):.4f} ± {np.std(cv_metrics['train_scores']):.4f}"
-            )
-            logger.info(
-                f"Valid scores: {np.mean(cv_metrics['valid_scores']):.4f} ± {np.std(cv_metrics['valid_scores']):.4f}"
-            )
+        logger.info(f"Cross-validation results:")
+        logger.info(
+            f"Train scores: {np.mean(cv_metrics['train_scores']):.4f} ± {np.std(cv_metrics['train_scores']):.4f}"
+        )
+        logger.info(
+            f"Valid scores: {np.mean(cv_metrics['valid_scores']):.4f} ± {np.std(cv_metrics['valid_scores']):.4f}"
+        )
 
         return cv_metrics
 
@@ -313,8 +288,6 @@ class Trainer:
         Returns:
             Dictionary mapping feature names to importance scores
         """
-        if self.feature_names is None:
-            raise ValueError("Feature names not set during initialization")
 
         if self.model_type.startswith("LGBM"):
             importance = self.model.feature_importances_(importance_type=importance_type)
@@ -327,6 +300,8 @@ class Trainer:
 
         # Convert to dictionary if not already
         if isinstance(importance, np.ndarray):
+            if self.feature_names is None:
+                raise ValueError("Feature names not set during initialization")
             importance = dict(zip(self.feature_names, importance))
 
         # Sort and get top N if specified

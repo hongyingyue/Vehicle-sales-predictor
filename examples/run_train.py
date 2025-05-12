@@ -1,5 +1,7 @@
 import os
 import sys
+from datetime import datetime
+from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -90,6 +92,38 @@ def get_metrics(y_true, y_pred):
     return {"mae": mae, "rmse": rmse}
 
 
+def generate_model_metadata(
+    model_path: str, feature_columns: List[str], metrics: Dict[str, float], config: Dict, exp_id: str
+) -> None:
+    """
+    Generate model metadata file with version information and model details.
+
+    Args:
+        model_path: Path to the saved model
+        feature_columns: List of feature columns used in the model
+        metrics: Dictionary of model metrics
+        config: Training configuration
+        exp_id: Experiment ID
+    """
+    metadata = {
+        "version": exp_id,
+        "last_updated": datetime.now().isoformat(),
+        "feature_columns": feature_columns,
+        "model_path": model_path,
+        "metrics": metrics,
+        "model_config": {
+            "model_params": config.get("model_params", {}),
+            "categorical_features": config.get("categorical_feature", []),
+        },
+    }
+
+    # Save metadata in the same directory as the model
+    metadata_path = os.path.join(os.path.dirname(model_path), "./models/model_metadata.json")
+    with open(metadata_path, "w") as f:
+        json.dump(metadata, f, indent=4)
+    logger.info(f"Model metadata saved to {metadata_path}")
+
+
 def run_train(input_data_path, saved_model_path, config, label_column_name="salesVolume"):
     data = prepare_data(input_data_path=input_data_path)
     data = data.sort_values(["Date", "provinceId"])
@@ -115,16 +149,26 @@ def run_train(input_data_path, saved_model_path, config, label_column_name="sale
     trainer = Trainer(model)
     trainer.train(x_train, y_train, x_valid, y_valid, fit_params=config["fit_params"])
 
-    with open("feature_columns.json", "w") as f:
-        json.dump(feature_columns, f, indent=4)
-    trainer.save_model(model_dir=saved_model_path)
+    # Save model and generate metadata
+    trainer.save_model(saved_model_path)
     trainer.plot_feature_importance()
 
+    # Get predictions and metrics
     valid_pred = trainer.predict(x_valid)
     valid_true = valid[label_column_name]
-
     metrics = get_metrics(valid_true, valid_pred)
     logger.info(f"[IMPORTANT] Test metrics: {metrics}")
+
+    # Generate model metadata
+    generate_model_metadata(
+        model_path=saved_model_path,
+        feature_columns=feature_columns,
+        metrics=metrics,
+        config=config,
+        exp_id=os.path.basename(saved_model_path).replace(".pkl", ""),
+    )
+
+    # Save validation results
     valid["pred"] = valid_pred
     valid.to_csv("valid_with_pred.csv", index=False)
 
@@ -132,7 +176,7 @@ def run_train(input_data_path, saved_model_path, config, label_column_name="sale
 if __name__ == "__main__":
     args = parse_args()
     if args.saved_model_path is None:
-        args.saved_model_path = f"./{args.exp_id}.pkl"
+        args.saved_model_path = f"./models/{args.exp_id}.pkl"
 
     logger.info(f"[IMPORTANT] Start Experiment: {args.exp_id}")
     config = get_training_config(args.config_file_path)
