@@ -45,6 +45,8 @@ class SalesRequest(BaseModel):
     model_name: str = Field(..., description="Model name", min_length=1, max_length=50)
     date: str = Field(..., description="Date in YYYYMM format")
     historical_sales: List[float] = Field(..., description="Historical sales volumes (at least 12 months)")
+    province: str = Field(..., description="Province name")
+    body_type: str = Field(..., description="Vehicle body type")
 
     @validator("date")
     def validate_date(cls, v):
@@ -69,6 +71,8 @@ class SalesRequest(BaseModel):
                 "model_name": "ModelA",
                 "date": "202312",
                 "historical_sales": [120, 135, 142, 150, 138, 145, 160, 152, 148, 155, 165, 158],
+                "province": "Beijing",
+                "body_type": "SUV",
             }
         }
 
@@ -137,11 +141,18 @@ class SalesPredictor:
         Returns:
             DataFrame with added lagging features
         """
-        # Group by province_id and model_name
+        # Add lagging features for salesVolume (lags 1-12)
         for col in ["salesVolume"]:
             for lag in range(1, 13):  # Lag 1 to 12
-                lag_col = f"{col}_lag_{lag}"
+                lag_col = f"{col}_lag{lag}"
                 data[lag_col] = data.groupby(["provinceId", "model"])[col].shift(lag)
+
+        # Add lagging features for popularity (lag 1)
+        for col in ["popularity"]:
+            for lag in range(1, 2):  # Only lag 1 for popularity
+                lag_col = f"{col}_lag{lag}"
+                data[lag_col] = data.groupby(["provinceId", "model"])[col].shift(lag)
+
         return data
 
     def prepare_input_data(self, request: SalesRequest) -> pd.DataFrame:
@@ -169,6 +180,9 @@ class SalesPredictor:
                     "provinceId": request.province_id,
                     "model": request.model_name,
                     "salesVolume": request.historical_sales,
+                    "popularity": [0] * len(request.historical_sales),  # Add popularity column with default value
+                    "province": request.province,
+                    "bodyType": request.body_type,
                 }
             )
 
@@ -179,6 +193,9 @@ class SalesPredictor:
                     "provinceId": request.province_id,
                     "model": request.model_name,
                     "salesVolume": [np.nan],  # This is what we want to predict
+                    "popularity": [0],  # Add popularity for prediction point
+                    "province": request.province,
+                    "bodyType": request.body_type,
                 }
             )
 
@@ -187,6 +204,14 @@ class SalesPredictor:
 
             # Add features
             full_data = self.add_lagging_features(full_data)
+
+            # Convert categorical features to the correct type
+            categorical_features = ["province", "model", "bodyType"]
+            for feature in categorical_features:
+                if feature in full_data.columns:
+                    full_data[feature] = full_data[feature].astype("category")
+
+            print(full_data)
 
             return full_data
 

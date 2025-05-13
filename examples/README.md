@@ -44,6 +44,19 @@ curl -X POST "http://localhost:8000/predict" \
     "province_id": "P001",
     "model_name": "ModelA",
     "date": "202312",
-    "historical_sales": [120, 135, 142, 150, 138, 145, 160, 152, 148, 155, 165, 158]
+    "historical_sales": [120, 135, 142, 150, 138, 145, 160, 152, 148, 155, 165, 158],
+    "province": "Beijing",
+    "body_type": "SUV"
   }'
+```
+
+deploy in docker
+```
+docker build -t vehicle-sales-api -f Dockerfile.inference .
+docker run -d -p 8000:8000 --name vehicle-api vehicle-sales-api
+```
+
+
+deploy in AWS sagermaker
+```
 ```
