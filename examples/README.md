@@ -50,6 +50,10 @@ curl -X POST "http://localhost:8000/predict" \
   }'
 ```
 
+```text
+{"prediction":146.52386474609375,"confidence_interval":{"lower_bound":131.8714782714844,"upper_bound":161.17625122070314},"feature_importance":{"province":0.008583756163716316,"model":0.012458096258342266,"bodyType":0.002620626939460635,"salesVolume_lag1":0.7366300821304321,"salesVolume_lag2":0.13781027495861053,"salesVolume_lag3":0.029291000217199326,"salesVolume_lag4":0.011792780831456184,"salesVolume_lag5":0.003110651159659028,"salesVolume_lag6":0.0030429470352828503,"salesVolume_lag7":0.003805882763117552,"salesVolume_lag8":0.005683655850589275,"salesVolume_lag9":0.003304564394056797,"salesVolume_lag10":0.00472667720168829,"salesVolume_lag11":0.009785151109099388,"salesVolume_lag12":0.018264394253492355,"popularity_lag1":0.009089479222893715},"model_version":"baseline-001","prediction_timestamp":"2025-05-12T20:53:51.154189"}%
+```
+
 deploy in docker
 ```
 docker build -t vehicle-sales-api -f Dockerfile.inference .

@@ -118,7 +118,7 @@ def generate_model_metadata(
     }
 
     # Save metadata in the same directory as the model
-    metadata_path = os.path.join(os.path.dirname(model_path), "./models/model_metadata.json")
+    metadata_path = os.path.join(os.path.dirname(model_path), "model_metadata.json")
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=4)
     logger.info(f"Model metadata saved to {metadata_path}")

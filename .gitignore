@@ -89,3 +89,4 @@ coverage.xml
 *.mdl
 *.png
 *.json
+/mlruns

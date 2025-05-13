@@ -10,7 +10,7 @@ import pandas as pd
 import xgboost as xgb
 from fastapi import Depends, FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import joblib
 
 # Configure logging
@@ -48,7 +48,8 @@ class SalesRequest(BaseModel):
     province: str = Field(..., description="Province name")
     body_type: str = Field(..., description="Vehicle body type")
 
-    @validator("date")
+    @field_validator("date")
+    @classmethod
     def validate_date(cls, v):
         try:
             datetime.strptime(v, "%Y%m")
@@ -56,7 +57,8 @@ class SalesRequest(BaseModel):
         except ValueError:
             raise ValueError("Date must be in YYYYMM format")
 
-    @validator("historical_sales")
+    @field_validator("historical_sales")
+    @classmethod
     def validate_historical_sales(cls, v):
         if len(v) < 12:
             raise ValueError("At least 12 months of historical sales data is required")
@@ -210,8 +212,6 @@ class SalesPredictor:
             for feature in categorical_features:
                 if feature in full_data.columns:
                     full_data[feature] = full_data[feature].astype("category")
-
-            print(full_data)
 
             return full_data
 
