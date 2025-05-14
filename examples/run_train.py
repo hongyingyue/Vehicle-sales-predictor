@@ -16,7 +16,15 @@ import yaml
 
 from vehicle_ml import Trainer, logger
 from vehicle_ml.data import DataIngester, DatetimeSplitter
-from vehicle_ml.feature import add_lagging_feature
+from vehicle_ml.feature import (
+    feature_registry,
+    registry,
+    add_lagging_feature,
+    add_datetime_feature,
+    add_rolling_feature,
+    add_num_num_feature,
+    add_cat_num_feature,
+)
 from vehicle_ml.metrics.regression import get_mae, get_rmse
 
 os.environ["DO_DEBUG"] = "false"
@@ -52,6 +60,15 @@ def prepare_data(input_data_path):
 
 
 def add_features(data: pd.DataFrame, feature_columns: Optional[List[str]] = None):
+    # Add datetime features
+    data = add_datetime_feature(
+        data,
+        time_column="Date",
+        date_type_list=["year", "month", "quarter", "dayofweek"],
+        feature_columns=feature_columns,
+    )
+
+    # Add lagging features for sales volume
     data = add_lagging_feature(
         data,
         groupby_column=["provinceId", "model"],
@@ -60,29 +77,41 @@ def add_features(data: pd.DataFrame, feature_columns: Optional[List[str]] = None
         feature_columns=feature_columns,
     )
 
-    data = add_lagging_feature(
-        data,
-        groupby_column=["provinceId", "model"],
-        value_columns=["popularity"],
-        lags=[1],
-        feature_columns=feature_columns,
-    )
+    # # Add lagging features for popularity
+    # data = add_lagging_feature(
+    #     data,
+    #     groupby_column=["provinceId", "model"],
+    #     value_columns=["popularity"],
+    #     lags=[1],
+    #     feature_columns=feature_columns,
+    # )
 
+    # # Add rolling features for sales volume
     # data = add_rolling_feature(
-    #     data=data,
+    #     data,
     #     groupby_column=["provinceId", "model"],
     #     value_columns=["salesVolume"],
     #     periods=[3, 6],
-    #     agg_funs=["max", "mean", "sum", "min"],
+    #     agg_funs=["mean", "std", "max", "min"],
     #     feature_columns=feature_columns
     # )
 
+    # # Add numerical interaction features
     # data = add_num_num_feature(
-    #     data=data,
-    #     num_features=['salesVolume_lag1', 'salesVolume_lag2'],
-    #     fun_list=['diff'],
+    #     data,
+    #     num_features=['salesVolume_lag1', 'salesVolume_lag2', 'popularity_lag1'],
+    #     fun_list=['ratio', 'diff'],
     #     feature_columns=feature_columns
     # )
+
+    # # Add categorical-numerical features
+    # data = add_cat_num_feature(
+    #     data,
+    #     amount_feas=['salesVolume'],
+    #     category_feas=['provinceId', 'model'],
+    #     fun_list=['mean', 'std', 'max', 'min']
+    # )
+
     return data
 
 

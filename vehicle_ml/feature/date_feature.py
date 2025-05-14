@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 @timer("add datetime feature")
 def add_datetime_feature(
-    data: pd.DataFrame, time_column, date_type_list=None, feature_columns: Optional[List[str]] = None
+    data: pd.DataFrame, time_column, date_type_list=None, prefix=None, feature_columns: Optional[List[str]] = None
 ):
     if time_column not in data.columns:
         raise ValueError(f"'{time_column}' column not found in dataframe.")

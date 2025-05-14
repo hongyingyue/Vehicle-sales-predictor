@@ -7,3 +7,4 @@ from .tabular_feature import (
     add_target_encoding_feature,
 )
 from .ts_feature import add_lagging_feature, add_lagging_rolling_feature, add_rolling_feature
+from .registry import registry, feature_registry
