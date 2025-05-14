@@ -14,7 +14,7 @@ import pandas as pd
 import xgboost as xgb
 import yaml
 
-from vehicle_ml import Trainer, logger
+from vehicle_ml import Trainer, logger, timer
 from vehicle_ml.data import DataIngester, DatetimeSplitter
 from vehicle_ml.feature import (
     feature_registry,
@@ -153,6 +153,7 @@ def generate_model_metadata(
     logger.info(f"Model metadata saved to {metadata_path}")
 
 
+@timer("training_pipeline")
 def run_train(input_data_path, saved_model_path, config, label_column_name="salesVolume"):
     data = prepare_data(input_data_path=input_data_path)
     data = data.sort_values(["Date", "provinceId"])

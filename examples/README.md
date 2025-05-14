@@ -64,3 +64,44 @@ docker run -d -p 8000:8000 --name vehicle-api vehicle-sales-api
 deploy in AWS sagermaker
 ```
 ```
+
+## Feature
+```python
+from vehicle_ml.feature import LocalFeatureStore, FeatureDefinition
+
+# Create a feature store instance
+store = LocalFeatureStore("my_features")
+
+# Define a feature
+feature_def = FeatureDefinition(
+    name="sales_lag_7d",
+    description="7-day lagged sales feature",
+    feature_type="numerical",
+    computation_function="add_lagging_feature",
+    parameters={
+        "groupby_column": "store_id",
+        "value_columns": ["sales"],
+        "lags": [7]
+    },
+    created_at=datetime.now(),
+    updated_at=datetime.now(),
+    version="1.0.0",
+    tags=["sales", "time_series"]
+)
+
+# Register the feature
+store.register_feature(feature_def)
+
+# Compute and save feature values
+data = pd.DataFrame(...)  # Your input data
+computed_data = store.compute_feature("sales_lag_7d", data)
+store.save_feature("sales_lag_7d", computed_data)
+
+# Retrieve feature values
+feature_data = store.get_feature(
+    "sales_lag_7d",
+    entity_ids=["store_1", "store_2"],
+    start_time=datetime(2023, 1, 1),
+    end_time=datetime(2023, 12, 31)
+)
+```

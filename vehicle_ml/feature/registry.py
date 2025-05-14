@@ -7,10 +7,14 @@ prediction models. It allows for feature registration, retrieval, and persistenc
 import hashlib
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import pandas as pd
+
+from .store import FeatureDefinition, FeatureStore
+from .local_store import LocalFeatureStore
 
 logger = logging.getLogger(__name__)
 
@@ -24,18 +28,29 @@ class FeatureRegistry:
 
     Attributes:
         columns (List[str]): List of registered feature column names.
+        feature_store (FeatureStore): The feature store instance for persistent storage.
     """
 
-    def __init__(self) -> None:
-        """Initialize an empty feature registry."""
+    def __init__(self, store: Optional[FeatureStore] = None) -> None:
+        """Initialize an empty feature registry with optional feature store."""
         self.columns: List[str] = []
-        logger.debug("Initialized empty feature registry")
+        self.feature_store = store or LocalFeatureStore("default")
+        logger.debug("Initialized feature registry")
 
-    def register(self, cols: Union[str, List[str]]) -> None:
+    def register(
+        self,
+        cols: Union[str, List[str]],
+        description: str = "",
+        feature_type: str = "numerical",
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """Register one or more feature columns.
 
         Args:
             cols: A single feature column name or a list of feature column names to register.
+            description: Description of the feature(s).
+            feature_type: Type of the feature (e.g., "numerical", "categorical").
+            parameters: Additional parameters for feature computation.
 
         Raises:
             TypeError: If cols is not a string or list of strings.
@@ -56,6 +71,19 @@ class FeatureRegistry:
             if any(c in col for c in ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
                 raise ValueError(f"Column name contains invalid characters: {col}")
 
+            # Create and register feature definition
+            feature_def = FeatureDefinition(
+                name=col,
+                description=description,
+                feature_type=feature_type,
+                computation_function="",  # This should be set based on how the feature is computed
+                parameters=parameters or {},
+                created_at=datetime.now(),
+                updated_at=datetime.now(),
+                version="1.0.0",
+            )
+            self.feature_store.register_feature(feature_def)
+
         self.columns.extend(cols)
         logger.debug(f"Registered {len(cols)} features: {cols}")
 
@@ -65,7 +93,7 @@ class FeatureRegistry:
         Returns:
             List[str]: List of all registered feature column names.
         """
-        return self.columns.copy()  # Return a copy to prevent external modification
+        return self.columns.copy()
 
     def hash_features(self) -> str:
         """Generate a hash of the registered features.
