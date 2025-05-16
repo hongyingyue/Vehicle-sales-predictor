@@ -30,13 +30,13 @@ LOGGING_CONFIG = {
             "formatter": "console",
             "stream": "ext://sys.stdout",
         },
-        "important_handler": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "formatter": "important",
-            "filters": ["important_filter"],
-            "filename": "important.log",
-        },
+        # "important_handler": {
+        #     "level": "INFO",
+        #     "class": "logging.FileHandler",
+        #     "formatter": "important",
+        #     "filters": ["important_filter"],
+        #     "filename": "important.log",
+        # },
         "file_handler": {
             "level": "INFO",
             "class": "logging.FileHandler",
@@ -45,7 +45,8 @@ LOGGING_CONFIG = {
             "mode": "w",
         },
     },
-    "root": {"level": "INFO", "handlers": ["console", "file_handler", "important_handler"]},
+    # "important_handler" if necessary
+    "root": {"level": "INFO", "handlers": ["console", "file_handler"]},
 }
 
 logging.config.dictConfig(LOGGING_CONFIG)

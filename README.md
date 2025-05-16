@@ -34,6 +34,9 @@ uv pip install -r requirements.txt
 
 ## 🚀 Getting Started
 
+I uploaded dataset to [kaggle](https://www.kaggle.com/datasets/brendayue/china-vehicle-sales-data)
+
+
 Train your model:
 ```shell
 cd examples
@@ -50,5 +53,9 @@ Track your experiments
 mlflow ui
 ```
 
+Or I released the vehicle_ml as a package
+```
+pip install vehicle_ml
+```
 
 ## Experiments

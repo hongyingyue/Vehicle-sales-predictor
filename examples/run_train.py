@@ -36,7 +36,11 @@ def parse_args():
     parser.add_argument("exp_id", type=str, nargs="?", default="baseline-001")
     parser.add_argument("config_file_path", type=str, nargs="?", default="./training_config.yaml")
     parser.add_argument(
-        "input_data_path", type=str, nargs="?", default="../data/sales_data.csv", help="original data path"
+        "input_data_path",
+        type=str,
+        nargs="?",
+        default="../data/china_vehicle_sales_data.csv",
+        help="original data path",
     )
     parser.add_argument("saved_model_path", type=str, nargs="?", default=None)
     return parser.parse_args()
