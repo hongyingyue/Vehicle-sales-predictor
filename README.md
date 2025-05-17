@@ -53,9 +53,9 @@ Track your experiments
 mlflow ui
 ```
 
-Or I released the vehicle_ml as a package
+Or I released the [vehicle-ml](https://pypi.org/project/vehicle-ml/) package
 ```
-pip install vehicle_ml
+pip install vehicle-ml
 ```
 
 ## Experiments
