@@ -1,13 +1,14 @@
 import os
 import uuid
-from datetime import datetime
+import datetime
+
 from pathlib import Path
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 
 # Get the project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.parent.absolute()
@@ -34,15 +35,28 @@ def get_model_output_path():
     return os.path.join(model_dir, f"model_{correlation_id}.pkl")
 
 
+# Default arguments for the DAG
+default_args = {
+    "owner": "airflow",
+    "depends_on_past": False,
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 1,
+    "retry_delay": datetime.timedelta(minutes=5),
+}
+
 with DAG(
     dag_id="vehicle_sales_ml_pipeline",
-    schedule_interval=None,
-    start_date=datetime(2024, 1, 1),
+    default_args=default_args,
+    description="Vehicle Sales ML Pipeline with data preprocessing, training, and evaluation",
+    schedule=None,
+    start_date=datetime.datetime(2024, 1, 1),
     catchup=False,
     tags=["vehicle_sales", "ml_pipeline"],
+    max_active_runs=1,
 ) as dag:
 
-    start = DummyOperator(task_id="start")
+    start = EmptyOperator(task_id="start")
 
     # Data preprocessing task
     preprocess_data = BashOperator(
@@ -50,10 +64,13 @@ with DAG(
         bash_command=f"""
         cd {PROJECT_ROOT} && \
         python examples/run_train.py \
-            --input_data_path {get_data_path()} \
-            --config_file_path {get_training_config()} \
-            --saved_model_path {get_model_output_path()}
+            baseline-001 \
+            {get_training_config()} \
+            {get_data_path()} \
+            {get_model_output_path()}
         """,
+        retries=2,
+        retry_delay=datetime.timedelta(minutes=5),
     )
 
     # Model training with MLflow tracking
@@ -62,10 +79,13 @@ with DAG(
         bash_command=f"""
         cd {PROJECT_ROOT} && \
         python examples/run_train_mlflow.py \
-            --input_data_path {get_data_path()} \
-            --config_file_path {get_training_config()} \
-            --saved_model_path {get_model_output_path()}
+            baseline-001 \
+            {get_training_config()} \
+            {get_data_path()} \
+            {get_model_output_path()}
         """,
+        retries=2,
+        retry_delay=datetime.timedelta(minutes=5),
     )
 
     # Model evaluation and metadata generation
@@ -74,14 +94,16 @@ with DAG(
         bash_command=f"""
         cd {PROJECT_ROOT} && \
         python examples/run_train.py \
-            --input_data_path {get_data_path()} \
-            --config_file_path {get_training_config()} \
-            --saved_model_path {get_model_output_path()} \
-            --evaluate_only
+            baseline-001 \
+            {get_training_config()} \
+            {get_data_path()} \
+            {get_model_output_path()}
         """,
+        retries=2,
+        retry_delay=datetime.timedelta(minutes=5),
     )
 
-    complete = DummyOperator(task_id="complete", trigger_rule=TriggerRule.ALL_SUCCESS)
+    complete = EmptyOperator(task_id="complete", trigger_rule=TriggerRule.ALL_SUCCESS)
 
     # Define the DAG structure
     start >> preprocess_data >> train_model >> evaluate_model >> complete
