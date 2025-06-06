@@ -90,3 +90,6 @@ coverage.xml
 *.png
 *.json
 /mlruns
+/airflow/logs
+/airflow/airflow*
+/airflow/simple_auth*

@@ -46,6 +46,7 @@ class Trainer:
         """
         self.model = model
         self.model_type = type(model).__name__
+        print(self.model_type)
         self.feature_names = feature_names
         self.random_state = random_state
         self.best_iteration = None
