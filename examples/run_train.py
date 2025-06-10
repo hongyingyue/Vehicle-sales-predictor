@@ -33,8 +33,20 @@ warnings.filterwarnings("ignore")
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("exp_id", type=str, nargs="?", default="baseline-001")
-    parser.add_argument("config_file_path", type=str, nargs="?", default="./training_config.yaml")
+    parser.add_argument(
+        "exp_id",
+        type=str,
+        nargs="?",
+        default="baseline-001",
+        help="pkl file name",
+    )
+    parser.add_argument(
+        "config_file_path",
+        type=str,
+        nargs="?",
+        default="./training_config.yaml",
+        help="yaml file path",
+    )
     parser.add_argument(
         "input_data_path",
         type=str,
@@ -42,7 +54,13 @@ def parse_args():
         default="../data/china_vehicle_sales_data.csv",
         help="original data path",
     )
-    parser.add_argument("saved_model_path", type=str, nargs="?", default=None)
+    parser.add_argument(
+        "saved_model_path",
+        type=str,
+        nargs="?",
+        default=None,
+        help="saved model path",
+    )
     return parser.parse_args()
 
 
@@ -68,9 +86,10 @@ def add_features(data: pd.DataFrame, feature_columns: Optional[List[str]] = None
     data = add_datetime_feature(
         data,
         time_column="Date",
-        date_type_list=["year", "month", "quarter", "dayofweek"],
+        date_type_list=["year", "month", "quarter"],
         feature_columns=feature_columns,
     )
+    print(data.head())
 
     # Add lagging features for sales volume
     data = add_lagging_feature(
@@ -161,6 +180,7 @@ def generate_model_metadata(
 def run_train(input_data_path, saved_model_path, config, label_column_name="salesVolume"):
     data = prepare_data(input_data_path=input_data_path)
     data = data.sort_values(["Date", "provinceId"])
+    print(data.head())
 
     feature_columns = config["categorical_feature"].copy()
     data = add_features(data, feature_columns=feature_columns)
@@ -170,7 +190,7 @@ def run_train(input_data_path, saved_model_path, config, label_column_name="sale
         f"[IMPORTANT] Feature size: {len(feature_columns)}, categorical feature: {len(config['categorical_feature'])}"
     )
 
-    data_splitter = DatetimeSplitter(time_column="Date", test_date=["201711", "201712"])
+    data_splitter = DatetimeSplitter(time_column="Date", test_date=["2017-11-01", "2017-12-01"])
     train, valid = data_splitter.split(data)
 
     x_train = train[feature_columns]
@@ -185,7 +205,7 @@ def run_train(input_data_path, saved_model_path, config, label_column_name="sale
 
     # Save model and generate metadata
     trainer.save_model(saved_model_path)
-    trainer.plot_feature_importance()
+    trainer.plot_feature_importance(save_path="models/feature_importance.png")
 
     # Get predictions and metrics
     valid_pred = trainer.predict(x_valid)
